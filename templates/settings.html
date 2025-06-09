@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Red Team Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="fas fa-cog text-secondary me-2"></i>
+                Platform Settings
+            </h2>
+            <p class="text-muted mb-0">Configure security preferences and operational parameters</p>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Settings</li>
+            </ol>
+        </nav>
+    </div>
+    
+    <div class="row">
+        <!-- User Profile Settings -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i> User Profile
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" class="form-control" value="{{ current_user.username }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <input type="text" class="form-control" value="{{ current_user.role|title }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Account Created</label>
+                        <input type="text" class="form-control" value="{{ current_user.created_at.strftime('%Y-%m-%d %H:%M') }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Login</label>
+                        <input type="text" class="form-control" 
+                               value="{{ current_user.last_login.strftime('%Y-%m-%d %H:%M') if current_user.last_login else 'First login' }}" readonly>
+                    </div>
+                    <div class="d-grid">
+                        <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-key me-2"></i> Change Password
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Settings -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i> Security Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="enable_anonymity" checked>
+                            <label class="form-check-label" for="enable_anonymity">
+                                <i class="fas fa-user-secret me-1"></i>
+                                Enable Anonymity by Default
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">Automatically enable Tor proxy for all scans</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="auto_encrypt" checked disabled>
+                            <label class="form-check-label" for="auto_encrypt">
+                                <i class="fas fa-lock me-1"></i>
+                                Auto-encrypt All Data (Always On)
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">All sensitive data automatically encrypted with AES-256</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="secure_logging" checked disabled>
+                            <label class="form-check-label" for="secure_logging">
+                                <i class="fas fa-history me-1"></i>
+                                Encrypted Audit Logging (Always On)
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">All activities logged with military-grade encryption</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="safe_mode" checked>
+                            <label class="form-check-label" for="safe_mode">
+                                <i class="fas fa-shield me-1"></i>
+                                Safe Mode Operations
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">Enable safety checks and rate limiting</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="session_timeout" class="form-label">Session Timeout (minutes)</label>
+                        <select class="form-select" id="session_timeout">
+                            <option value="30">30 minutes</option>
+                            <option value="60" selected>1 hour</option>
+                            <option value="120">2 hours</option>
+                            <option value="240">4 hours</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Scanning Preferences -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search me-2"></i> Scanning Preferences
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="default_scan_type" class="form-label">Default Network Scan Type</label>
+                        <select class="form-select" id="default_scan_type">
+                            <option value="basic" selected>Basic Scan</option>
+                            <option value="stealth">Stealth Scan</option>
+                            <option value="aggressive">Aggressive Scan</option>
+                            <option value="comprehensive">Comprehensive Scan</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="scan_threads" class="form-label">Concurrent Scan Threads</label>
+                        <select class="form-select" id="scan_threads">
+                            <option value="1">1 Thread (Safest)</option>
+                            <option value="5" selected>5 Threads (Balanced)</option>
+                            <option value="10">10 Threads (Fast)</option>
+                            <option value="20">20 Threads (Aggressive)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="scan_delay" class="form-label">Scan Delay (seconds)</label>
+                        <select class="form-select" id="scan_delay">
+                            <option value="0">No Delay</option>
+                            <option value="1" selected>1 Second</option>
+                            <option value="2">2 Seconds</option>
+                            <option value="5">5 Seconds</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="auto_report">
+                            <label class="form-check-label" for="auto_report">
+                                <i class="fas fa-file-alt me-1"></i>
+                                Auto-generate Reports
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">Automatically create technical reports after scans</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notification Settings -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bell me-2"></i> Notification Preferences
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_scan_complete" checked>
+                            <label class="form-check-label" for="notify_scan_complete">
+                                <i class="fas fa-check-circle me-1"></i>
+                                Scan Completion Alerts
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_critical" checked>
+                            <label class="form-check-label" for="notify_critical">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                Critical Vulnerability Alerts
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_exploit" checked>
+                            <label class="form-check-label" for="notify_exploit">
+                                <i class="fas fa-code me-1"></i>
+                                Successful Exploit Notifications
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="notify_report">
+                            <label class="form-check-label" for="notify_report">
+                                <i class="fas fa-file-alt me-1"></i>
+                                Report Generation Alerts
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notification_method" class="form-label">Notification Method</label>
+                        <select class="form-select" id="notification_method">
+                            <option value="browser" selected>Browser Notifications</option>
+                            <option value="email">Email Alerts</option>
+                            <option value="both">Browser + Email</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Anonymity and Advanced Settings -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-secret me-2"></i> Anonymity and Advanced Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="mb-3">Tor Configuration</h6>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="tor_auto_rotate" checked>
+                                    <label class="form-check-label" for="tor_auto_rotate">
+                                        Auto-rotate Tor Circuits
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="tor_rotate_interval" class="form-label">Circuit Rotation (minutes)</label>
+                                <select class="form-select" id="tor_rotate_interval">
+                                    <option value="5">5 minutes</option>
+                                    <option value="10" selected>10 minutes</option>
+                                    <option value="15">15 minutes</option>
+                                    <option value="30">30 minutes</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <h6 class="mb-3">Proxy Settings</h6>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="proxy_chains">
+                                    <label class="form-check-label" for="proxy_chains">
+                                        Enable Proxy Chains
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="proxy_count" class="form-label">Max Proxy Hops</label>
+                                <select class="form-select" id="proxy_count">
+                                    <option value="1">1 Proxy</option>
+                                    <option value="2" selected>2 Proxies</option>
+                                    <option value="3">3 Proxies</option>
+                                    <option value="5">5 Proxies</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <h6 class="mb-3">Encryption Settings</h6>
+                            <div class="mb-3">
+                                <label for="encryption_level" class="form-label">Encryption Level</label>
+                                <select class="form-select" id="encryption_level" disabled>
+                                    <option value="aes256" selected>AES-256 (Always On)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="perfect_forward_secrecy" checked disabled>
+                                    <label class="form-check-label" for="perfect_forward_secrecy">
+                                        Perfect Forward Secrecy (Always On)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- System Information -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i> System Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-server fa-2x text-primary mb-2"></i>
+                                <h6>Platform Version</h6>
+                                <p class="text-muted">Red Team v2.0.1</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-shield-alt fa-2x text-success mb-2"></i>
+                                <h6>Security Level</h6>
+                                <p class="text-success">Maximum</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-database fa-2x text-info mb-2"></i>
+                                <h6>Database</h6>
+                                <p class="text-muted">Encrypted PostgreSQL</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <i class="fas fa-network-wired fa-2x text-warning mb-2"></i>
+                                <h6>Network Status</h6>
+                                <p class="text-success" id="network-status">Connected</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Save Settings -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+                <button type="button" class="btn btn-primary" onclick="saveSettings()">
+                    <i class="fas fa-save me-1"></i> Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Load saved settings from localStorage
+document.addEventListener('DOMContentLoaded', function() {
+    loadSettings();
+    checkNetworkStatus();
+});
+
+function loadSettings() {
+    // Load settings from localStorage or use defaults
+    const settings = JSON.parse(localStorage.getItem('redteam_settings') || '{}');
+    
+    // Apply saved settings to form elements
+    if (settings.enable_anonymity !== undefined) {
+        document.getElementById('enable_anonymity').checked = settings.enable_anonymity;
+    }
+    if (settings.safe_mode !== undefined) {
+        document.getElementById('safe_mode').checked = settings.safe_mode;
+    }
+    if (settings.session_timeout) {
+        document.getElementById('session_timeout').value = settings.session_timeout;
+    }
+    if (settings.default_scan_type) {
+        document.getElementById('default_scan_type').value = settings.default_scan_type;
+    }
+    if (settings.scan_threads) {
+        document.getElementById('scan_threads').value = settings.scan_threads;
+    }
+    if (settings.scan_delay) {
+        document.getElementById('scan_delay').value = settings.scan_delay;
+    }
+    if (settings.auto_report !== undefined) {
+        document.getElementById('auto_report').checked = settings.auto_report;
+    }
+    if (settings.notify_scan_complete !== undefined) {
+        document.getElementById('notify_scan_complete').checked = settings.notify_scan_complete;
+    }
+    if (settings.notify_critical !== undefined) {
+        document.getElementById('notify_critical').checked = settings.notify_critical;
+    }
+    if (settings.notify_exploit !== undefined) {
+        document.getElementById('notify_exploit').checked = settings.notify_exploit;
+    }
+    if (settings.notify_report !== undefined) {
+        document.getElementById('notify_report').checked = settings.notify_report;
+    }
+    if (settings.notification_method) {
+        document.getElementById('notification_method').value = settings.notification_method;
+    }
+    if (settings.tor_auto_rotate !== undefined) {
+        document.getElementById('tor_auto_rotate').checked = settings.tor_auto_rotate;
+    }
+    if (settings.tor_rotate_interval) {
+        document.getElementById('tor_rotate_interval').value = settings.tor_rotate_interval;
+    }
+    if (settings.proxy_chains !== undefined) {
+        document.getElementById('proxy_chains').checked = settings.proxy_chains;
+    }
+    if (settings.proxy_count) {
+        document.getElementById('proxy_count').value = settings.proxy_count;
+    }
+}
+
+function saveSettings() {
+    // Collect all settings
+    const settings = {
+        enable_anonymity: document.getElementById('enable_anonymity').checked,
+        safe_mode: document.getElementById('safe_mode').checked,
+        session_timeout: document.getElementById('session_timeout').value,
+        default_scan_type: document.getElementById('default_scan_type').value,
+        scan_threads: document.getElementById('scan_threads').value,
+        scan_delay: document.getElementById('scan_delay').value,
+        auto_report: document.getElementById('auto_report').checked,
+        notify_scan_complete: document.getElementById('notify_scan_complete').checked,
+        notify_critical: document.getElementById('notify_critical').checked,
+        notify_exploit: document.getElementById('notify_exploit').checked,
+        notify_report: document.getElementById('notify_report').checked,
+        notification_method: document.getElementById('notification_method').value,
+        tor_auto_rotate: document.getElementById('tor_auto_rotate').checked,
+        tor_rotate_interval: document.getElementById('tor_rotate_interval').value,
+        proxy_chains: document.getElementById('proxy_chains').checked,
+        proxy_count: document.getElementById('proxy_count').value
+    };
+    
+    // Save to localStorage
+    localStorage.setItem('redteam_settings', JSON.stringify(settings));
+    
+    // Show success message
+    showAlert('Settings saved successfully', 'success');
+}
+
+function checkNetworkStatus() {
+    // Simple network connectivity check
+    fetch('/api/anonymity-status')
+        .then(response => {
+            if (response.ok) {
+                document.getElementById('network-status').textContent = 'Connected';
+                document.getElementById('network-status').className = 'text-success';
+            } else {
+                document.getElementById('network-status').textContent = 'Limited';
+                document.getElementById('network-status').className = 'text-warning';
+            }
+        })
+        .catch(() => {
+            document.getElementById('network-status').textContent = 'Offline';
+            document.getElementById('network-status').className = 'text-danger';
+        });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check' : 'info'}-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 3 seconds
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+
+// Request notification permission if browser notifications are enabled
+document.getElementById('notification_method').addEventListener('change', function() {
+    if (this.value === 'browser' || this.value === 'both') {
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+
+{% block title %}View Report - Red Team Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="fas fa-file-alt text-success me-2"></i>
+                {{ report.name }}
+            </h2>
+            <p class="text-muted mb-0">{{ report.type|title }} Report - Generated {{ report.created_at[:10] }}</p>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('main.reports') }}">Reports</a></li>
+                <li class="breadcrumb-item active">View Report</li>
+            </ol>
+        </nav>
+    </div>
+    
+    <!-- Report Header -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i> Report Information
+                    </h5>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                data-bs-toggle="dropdown">
+                            <i class="fas fa-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.export_report', report_id=report.id, format='html') }}">
+                                    <i class="fas fa-file-code me-2"></i> HTML Report
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.export_report', report_id=report.id, format='json') }}">
+                                    <i class="fas fa-file-code me-2"></i> JSON Data
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('main.export_report', report_id=report.id, format='csv') }}">
+                                    <i class="fas fa-file-csv me-2"></i> CSV Export
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Report Type:</strong>
+                            <p class="mb-0">
+                                <span class="badge bg-primary">{{ report.type|title }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Generated:</strong>
+                            <p class="mb-0">{{ report.created_at[:19] }}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Total Findings:</strong>
+                            <p class="mb-0">
+                                <span class="badge bg-info">{{ report.content.findings|length if report.content.findings else 0 }}</span>
+                            </p>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Security Status:</strong>
+                            <p class="mb-0">
+                                <i class="fas fa-lock text-success me-1"></i>
+                                <small>AES-256 Encrypted</small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if report.content %}
+    <!-- Executive Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i> Executive Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h2 text-danger">
+                                    {{ report.content.summary.severity_counts.critical if report.content.summary else 0 }}
+                                </div>
+                                <div class="text-muted">Critical Issues</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h2 text-warning">
+                                    {{ report.content.summary.severity_counts.high if report.content.summary else 0 }}
+                                </div>
+                                <div class="text-muted">High Risk</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h2 text-info">
+                                    {{ report.content.summary.severity_counts.medium if report.content.summary else 0 }}
+                                </div>
+                                <div class="text-muted">Medium Risk</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h2 text-primary">
+                                    {{ report.content.summary.total_findings if report.content.summary else 0 }}
+                                </div>
+                                <div class="text-muted">Total Findings</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if report.content.summary %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Risk Assessment</h6>
+                            {% set risk_score = ((report.content.summary.severity_counts.critical * 10) + 
+                                                (report.content.summary.severity_counts.high * 7) + 
+                                                (report.content.summary.severity_counts.medium * 4) + 
+                                                (report.content.summary.severity_counts.low * 2)) %}
+                            {% set max_score = report.content.summary.total_findings * 10 %}
+                            {% set percentage = (risk_score / max_score * 100) if max_score > 0 else 0 %}
+                            
+                            <div class="progress mb-2">
+                                <div class="progress-bar bg-{{ 'danger' if percentage >= 80 else 'warning' if percentage >= 50 else 'success' }}" 
+                                     style="width: {{ percentage }}%">
+                                    {{ "%.0f"|format(percentage) }}%
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                Overall Risk Score: 
+                                {% if percentage >= 80 %}
+                                    <span class="text-danger">Critical</span>
+                                {% elif percentage >= 50 %}
+                                    <span class="text-warning">High</span>
+                                {% elif percentage >= 25 %}
+                                    <span class="text-info">Medium</span>
+                                {% else %}
+                                    <span class="text-success">Low</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Scan Sessions Included</h6>
+                            <p class="mb-0">
+                                <span class="badge bg-secondary">{{ report.content.summary.total_sessions if report.content.summary else 0 }}</span>
+                                scan sessions analyzed
+                            </p>
+                            <small class="text-muted">
+                                Covering {{ report.content.targets|length if report.content.targets else 0 }} target systems
+                            </small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scan Sessions -->
+    {% if report.content.scan_sessions %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search me-2"></i> Scan Sessions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Session Name</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Started</th>
+                                    <th>Completed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for session in report.content.scan_sessions %}
+                                <tr>
+                                    <td>{{ session.name }}</td>
+                                    <td><span class="badge bg-secondary">{{ session.type }}</span></td>
+                                    <td>
+                                        {% set status_colors = {'completed': 'success', 'running': 'primary', 'failed': 'danger', 'pending': 'warning'} %}
+                                        <span class="badge bg-{{ status_colors.get(session.status, 'secondary') }}">
+                                            {{ session.status|title }}
+                                        </span>
+                                    </td>
+                                    <td>{{ session.created_at[:19] }}</td>
+                                    <td>{{ session.updated_at[:19] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Detailed Findings -->
+    {% if report.content.findings %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i> Detailed Findings
+                    </h5>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                data-bs-toggle="dropdown">
+                            <i class="fas fa-filter me-1"></i> Filter
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="filterReportFindings('all')">All Findings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterReportFindings('critical')">Critical Only</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterReportFindings('high')">High Risk Only</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterReportFindings('medium')">Medium Risk Only</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterReportFindings('low')">Low Risk Only</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="findings-container">
+                        {% for finding in report.content.findings %}
+                        <div class="col-md-6 mb-3 finding-item" data-severity="{{ finding.severity }}">
+                            <div class="card h-100 border-{{ 'danger' if finding.severity == 'critical' else 'warning' if finding.severity == 'high' else 'info' if finding.severity == 'medium' else 'success' if finding.severity == 'low' else 'secondary' }}">
+                                <div class="card-header d-flex justify-content-between align-items-center py-2">
+                                    <h6 class="mb-0">{{ finding.title }}</h6>
+                                    <span class="badge bg-{{ 'danger' if finding.severity == 'critical' else 'warning' if finding.severity == 'high' else 'info' if finding.severity == 'medium' else 'success' if finding.severity == 'low' else 'secondary' }}">
+                                        {{ finding.severity|title }}
+                                    </span>
+                                </div>
+                                <div class="card-body py-2">
+                                    <div class="row g-2">
+                                        <div class="col-12">
+                                            <small><strong>Target:</strong> 
+                                                <code>{{ finding.target_host if finding.target_host != 'Encrypted' else '[Encrypted]' }}</code>
+                                                {% if finding.port %}:{{ finding.port }}{% endif %}
+                                            </small>
+                                        </div>
+                                        <div class="col-12">
+                                            <small><strong>Type:</strong> 
+                                                <span class="badge bg-light text-dark">{{ finding.type.replace('_', ' ')|title }}</span>
+                                            </small>
+                                        </div>
+                                        {% if finding.cve_id %}
+                                        <div class="col-12">
+                                            <small><strong>CVE:</strong> 
+                                                <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name={{ finding.cve_id }}" 
+                                                   target="_blank" class="text-decoration-none">
+                                                    {{ finding.cve_id }}
+                                                    <i class="fas fa-external-link-alt fa-xs"></i>
+                                                </a>
+                                            </small>
+                                        </div>
+                                        {% endif %}
+                                        {% if finding.cvss_score %}
+                                        <div class="col-12">
+                                            <small><strong>CVSS Score:</strong> {{ finding.cvss_score }}/10</small>
+                                        </div>
+                                        {% endif %}
+                                        {% if finding.description and finding.description != 'Encrypted' %}
+                                        <div class="col-12">
+                                            <small class="text-muted">{{ finding.description[:100] }}{% if finding.description|length > 100 %}...{% endif %}</small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if finding.remediation and finding.remediation != 'Encrypted' %}
+                                <div class="card-footer py-2">
+                                    <small class="text-success">
+                                        <i class="fas fa-tools me-1"></i>
+                                        <strong>Remediation:</strong> {{ finding.remediation[:80] }}{% if finding.remediation|length > 80 %}...{% endif %}
+                                    </small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recommendations -->
+    {% if report.content.recommendations %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i> Security Recommendations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for recommendation in report.content.recommendations %}
+                    <div class="card mb-3 border-{{ 'danger' if recommendation.priority == 'Critical' else 'warning' if recommendation.priority == 'High' else 'info' }}">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">{{ recommendation.title }}</h6>
+                            <span class="badge bg-{{ 'danger' if recommendation.priority == 'Critical' else 'warning' if recommendation.priority == 'High' else 'info' }}">
+                                {{ recommendation.priority }} Priority
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-2">{{ recommendation.description }}</p>
+                            {% if recommendation.action_items %}
+                            <h6>Action Items:</h6>
+                            <ul class="mb-0">
+                                {% for item in recommendation.action_items %}
+                                <li>{{ item }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <!-- No Report Content -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                    <h5 class="text-muted">Report Content Unavailable</h5>
+                    <p class="text-muted">
+                        This report may be corrupted or the decryption failed. 
+                        Please try regenerating the report or contact support.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('main.reports') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Reports
+                </a>
+                <div>
+                    <button class="btn btn-outline-primary" onclick="printReport()">
+                        <i class="fas fa-print me-1"></i> Print Report
+                    </button>
+                    <button class="btn btn-primary" onclick="shareReport()">
+                        <i class="fas fa-share me-1"></i> Share Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function filterReportFindings(severity) {
+    const items = document.querySelectorAll('.finding-item');
+    
+    items.forEach(item => {
+        if (severity === 'all' || item.dataset.severity === severity) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function printReport() {
+    window.print();
+}
+
+function shareReport() {
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ report.name }}',
+            text: 'Security assessment report from Red Team Platform',
+            url: window.location.href
+        }).catch(err => console.log('Error sharing:', err));
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            alert('Report URL copied to clipboard');
+        }).catch(() => {
+            alert('Unable to share report. Please copy the URL manually.');
+        });
+    }
+}
+
+// Add print styles
+const printStyles = `
+    @media print {
+        .navbar, .breadcrumb, .btn, .dropdown, footer { display: none !important; }
+        .card { border: 1px solid #dee2e6 !important; box-shadow: none !important; }
+        .badge { background-color: #6c757d !important; color: white !important; }
+        body { background-color: white !important; color: black !important; }
+    }
+`;
+
+const styleSheet = document.createElement('style');
+styleSheet.textContent = printStyles;
+document.head.appendChild(styleSheet);
+</script>
+{% endblock %}

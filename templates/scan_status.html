@@ -1,0 +1,518 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Status - Red Team Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="fas fa-search text-primary me-2"></i>
+                Scan Status: {{ scan_session.session_name }}
+            </h2>
+            <p class="text-muted mb-0">{{ scan_session.scan_type|title }} scan session</p>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Scan Status</li>
+            </ol>
+        </nav>
+    </div>
+    
+    <!-- Scan Information -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i> Scan Information
+                    </h5>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="refreshScanStatus()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Session Name</label>
+                                <p class="mb-0">{{ scan_session.session_name }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Scan Type</label>
+                                <p class="mb-0">
+                                    <span class="badge bg-primary">{{ scan_session.scan_type|title }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Status</label>
+                                <p class="mb-0">
+                                    {% set status_colors = {'completed': 'success', 'running': 'primary', 'failed': 'danger', 'pending': 'warning'} %}
+                                    <span class="badge bg-{{ status_colors.get(scan_session.status, 'secondary') }}" id="scan-status-badge">
+                                        <i class="fas fa-{{ 'check' if scan_session.status == 'completed' else 'spinner fa-spin' if scan_session.status == 'running' else 'times' if scan_session.status == 'failed' else 'clock' }} me-1"></i>
+                                        {{ scan_session.status|title }}
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Progress</label>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" 
+                                         style="width: {{ '100' if scan_session.status == 'completed' else '50' if scan_session.status == 'running' else '0' }}%"
+                                         id="scan-progress-bar">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Started</label>
+                                <p class="mb-0">{{ scan_session.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Last Updated</label>
+                                <p class="mb-0" id="last-updated">{{ scan_session.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Findings Count</label>
+                                <p class="mb-0">
+                                    <span class="badge bg-info" id="findings-count">{{ findings|length }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Duration</label>
+                                <p class="mb-0" id="scan-duration">
+                                    {% set duration = (scan_session.updated_at - scan_session.created_at).total_seconds() %}
+                                    {% if duration > 3600 %}
+                                        {{ "%.1f"|format(duration/3600) }} hours
+                                    {% elif duration > 60 %}
+                                        {{ "%.1f"|format(duration/60) }} minutes
+                                    {% else %}
+                                        {{ "%.0f"|format(duration) }} seconds
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Findings Summary -->
+    {% if findings %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i> Findings Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% set severity_counts = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0, 'info': 0} %}
+                        {% for finding in findings %}
+                            {% set _ = severity_counts.update({finding.severity: severity_counts[finding.severity] + 1}) %}
+                        {% endfor %}
+                        
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <div class="h3 text-danger">{{ severity_counts.critical }}</div>
+                                <div class="text-muted">Critical</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <div class="h3 text-warning">{{ severity_counts.high }}</div>
+                                <div class="text-muted">High</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <div class="h3 text-info">{{ severity_counts.medium }}</div>
+                                <div class="text-muted">Medium</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <div class="h3 text-success">{{ severity_counts.low }}</div>
+                                <div class="text-muted">Low</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <div class="h3 text-secondary">{{ severity_counts.info }}</div>
+                                <div class="text-muted">Info</div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="text-center">
+                                <div class="h3 text-primary">{{ findings|length }}</div>
+                                <div class="text-muted">Total</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Findings List -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i> Security Findings
+                    </h5>
+                    <div>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" 
+                                    data-bs-toggle="dropdown">
+                                <i class="fas fa-filter me-1"></i> Filter
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="filterFindings('all')">All Findings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterFindings('critical')">Critical Only</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterFindings('high')">High Risk Only</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterFindings('medium')">Medium Risk Only</a></li>
+                                <li><a class="dropdown-item" href="#" onclick="filterFindings('low')">Low Risk Only</a></li>
+                            </ul>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportFindings()">
+                            <i class="fas fa-download me-1"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if findings %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Severity</th>
+                                    <th>Title</th>
+                                    <th>Target</th>
+                                    <th>Port</th>
+                                    <th>Type</th>
+                                    <th>CVE</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="findings-table-body">
+                                {% for finding in findings %}
+                                <tr class="finding-row" data-severity="{{ finding.severity }}">
+                                    <td>
+                                        {% set severity_colors = {'critical': 'danger', 'high': 'warning', 'medium': 'info', 'low': 'success', 'info': 'secondary'} %}
+                                        <span class="badge bg-{{ severity_colors.get(finding.severity, 'secondary') }}">
+                                            {{ finding.severity|title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <strong>{{ finding.title }}</strong>
+                                        {% if finding.cvss_score %}
+                                        <br><small class="text-muted">CVSS: {{ finding.cvss_score }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code>{{ finding.target_host if finding.target_host != 'Encrypted' else '[Encrypted]' }}</code>
+                                    </td>
+                                    <td>
+                                        {% if finding.port %}
+                                            <span class="badge bg-secondary">{{ finding.port }}</span>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ finding.type.replace('_', ' ')|title }}</span>
+                                    </td>
+                                    <td>
+                                        {% if finding.cve_id %}
+                                            <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name={{ finding.cve_id }}" 
+                                               target="_blank" class="text-decoration-none">
+                                                {{ finding.cve_id }}
+                                                <i class="fas fa-external-link-alt fa-xs"></i>
+                                            </a>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-info" 
+                                                onclick="showFindingDetails({{ loop.index0 }})"
+                                                title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        {% if scan_session.status == 'running' %}
+                        <i class="fas fa-spinner fa-spin fa-3x text-primary mb-3"></i>
+                        <h5 class="text-muted">Scan in Progress</h5>
+                        <p class="text-muted">Findings will appear here as the scan progresses...</p>
+                        {% elif scan_session.status == 'completed' %}
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5 class="text-muted">Scan Completed</h5>
+                        <p class="text-muted">No security findings detected in this scan.</p>
+                        {% elif scan_session.status == 'failed' %}
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                        <h5 class="text-muted">Scan Failed</h5>
+                        <p class="text-muted">The scan encountered an error and could not complete.</p>
+                        {% else %}
+                        <i class="fas fa-clock fa-3x text-warning mb-3"></i>
+                        <h5 class="text-muted">Scan Pending</h5>
+                        <p class="text-muted">The scan is queued and will start shortly.</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+                </div>
+                <div>
+                    {% if scan_session.status == 'completed' and findings %}
+                    <a href="{{ url_for('main.reports') }}?session_id={{ scan_session.id }}" class="btn btn-success">
+                        <i class="fas fa-file-alt me-1"></i> Generate Report
+                    </a>
+                    {% endif %}
+                    {% if scan_session.status == 'running' %}
+                    <button class="btn btn-danger" onclick="stopScan()">
+                        <i class="fas fa-stop me-1"></i> Stop Scan
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Finding Details Modal -->
+<div class="modal fade" id="findingDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Finding Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="finding-details-content">
+                <!-- Details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Store findings data for JavaScript access
+const findingsData = {{ findings|tojson }};
+
+// Auto-refresh if scan is running
+let refreshInterval;
+if ('{{ scan_session.status }}' === 'running') {
+    refreshInterval = setInterval(refreshScanStatus, 10000); // Refresh every 10 seconds
+}
+
+function refreshScanStatus() {
+    fetch(`/api/scan-progress/{{ scan_session.id }}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update status badge
+            const statusBadge = document.getElementById('scan-status-badge');
+            const statusColors = {
+                'completed': 'success',
+                'running': 'primary', 
+                'failed': 'danger',
+                'pending': 'warning'
+            };
+            
+            statusBadge.className = `badge bg-${statusColors[data.status] || 'secondary'}`;
+            statusBadge.innerHTML = `
+                <i class="fas fa-${data.status === 'completed' ? 'check' : 
+                                   data.status === 'running' ? 'spinner fa-spin' : 
+                                   data.status === 'failed' ? 'times' : 'clock'} me-1"></i>
+                ${data.status.charAt(0).toUpperCase() + data.status.slice(1)}
+            `;
+            
+            // Update findings count
+            document.getElementById('findings-count').textContent = data.findings_count;
+            
+            // Update last updated time
+            document.getElementById('last-updated').textContent = new Date(data.updated_at).toLocaleString();
+            
+            // Update progress bar
+            const progressBar = document.getElementById('scan-progress-bar');
+            if (data.status === 'completed') {
+                progressBar.style.width = '100%';
+                progressBar.className = 'progress-bar bg-success';
+                clearInterval(refreshInterval); // Stop auto-refresh
+                
+                // Reload page to show findings
+                setTimeout(() => window.location.reload(), 2000);
+            } else if (data.status === 'failed') {
+                progressBar.style.width = '100%';
+                progressBar.className = 'progress-bar bg-danger';
+                clearInterval(refreshInterval);
+            } else if (data.status === 'running') {
+                progressBar.style.width = '50%';
+                progressBar.className = 'progress-bar bg-primary';
+            }
+        })
+        .catch(error => {
+            console.error('Error refreshing scan status:', error);
+        });
+}
+
+function filterFindings(severity) {
+    const rows = document.querySelectorAll('.finding-row');
+    
+    rows.forEach(row => {
+        if (severity === 'all' || row.dataset.severity === severity) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function showFindingDetails(index) {
+    const finding = findingsData[index];
+    if (!finding) return;
+    
+    const detailsContent = document.getElementById('finding-details-content');
+    
+    detailsContent.innerHTML = `
+        <div class="row">
+            <div class="col-md-12">
+                <h6><i class="fas fa-exclamation-triangle me-2"></i>Finding Summary</h6>
+                <table class="table table-sm">
+                    <tr>
+                        <th width="150">Title:</th>
+                        <td>${finding.title}</td>
+                    </tr>
+                    <tr>
+                        <th>Severity:</th>
+                        <td><span class="badge bg-${getSeverityColor(finding.severity)}">${finding.severity.toUpperCase()}</span></td>
+                    </tr>
+                    <tr>
+                        <th>Type:</th>
+                        <td>${finding.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</td>
+                    </tr>
+                    <tr>
+                        <th>Target:</th>
+                        <td><code>${finding.target_host !== 'Encrypted' ? finding.target_host : '[Encrypted]'}</code></td>
+                    </tr>
+                    ${finding.port ? `<tr><th>Port:</th><td>${finding.port}</td></tr>` : ''}
+                    ${finding.cve_id ? `<tr><th>CVE ID:</th><td><a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=${finding.cve_id}" target="_blank">${finding.cve_id}</a></td></tr>` : ''}
+                    ${finding.cvss_score ? `<tr><th>CVSS Score:</th><td>${finding.cvss_score}</td></tr>` : ''}
+                    <tr>
+                        <th>Discovered:</th>
+                        <td>${new Date(finding.created_at).toLocaleString()}</td>
+                    </tr>
+                </table>
+                
+                ${finding.description && finding.description !== 'Encrypted' ? `
+                <h6><i class="fas fa-info-circle me-2"></i>Description</h6>
+                <div class="alert alert-info">
+                    ${finding.description}
+                </div>
+                ` : ''}
+                
+                ${finding.remediation && finding.remediation !== 'Encrypted' ? `
+                <h6><i class="fas fa-tools me-2"></i>Remediation</h6>
+                <div class="alert alert-success">
+                    ${finding.remediation}
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
+    new bootstrap.Modal(document.getElementById('findingDetailsModal')).show();
+}
+
+function getSeverityColor(severity) {
+    const colors = {
+        'critical': 'danger',
+        'high': 'warning', 
+        'medium': 'info',
+        'low': 'success',
+        'info': 'secondary'
+    };
+    return colors[severity] || 'secondary';
+}
+
+function exportFindings() {
+    // Create CSV content
+    let csvContent = "Severity,Title,Target,Port,Type,CVE ID,CVSS Score,Description\n";
+    
+    findingsData.forEach(finding => {
+        const row = [
+            finding.severity,
+            `"${finding.title}"`,
+            finding.target_host !== 'Encrypted' ? finding.target_host : '[Encrypted]',
+            finding.port || '',
+            finding.type,
+            finding.cve_id || '',
+            finding.cvss_score || '',
+            finding.description && finding.description !== 'Encrypted' ? `"${finding.description.replace(/"/g, '""')}"` : ''
+        ].join(',');
+        csvContent += row + "\n";
+    });
+    
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `scan_findings_{{ scan_session.id }}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+}
+
+function stopScan() {
+    if (confirm('Are you sure you want to stop this scan? Any progress will be lost.')) {
+        // In a real implementation, this would make an API call to stop the scan
+        alert('Scan stop functionality not implemented in this demo.');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+
+{% block title %}Web Security Testing - Red Team Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="fas fa-globe text-info me-2"></i>
+                Web Security Tester
+            </h2>
+            <p class="text-muted mb-0">Comprehensive web application security assessment</p>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Web Security</li>
+            </ol>
+        </nav>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i> Web Security Test Configuration
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('main.start_web_security_test') }}">
+                        <div class="mb-3">
+                            <label for="scan_name" class="form-label">Test Name</label>
+                            <input type="text" class="form-control" id="scan_name" name="scan_name" 
+                                   placeholder="e.g., Corporate Web App Security Test" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="target_url" class="form-label">Target Web Application URL</label>
+                            <input type="url" class="form-control" id="target_url" name="target_url" 
+                                   placeholder="https://example.com" required>
+                            <div class="form-text">
+                                Full URL including protocol (http:// or https://)
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Test Modules</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="info_disclosure" checked>
+                                            <label class="form-check-label" for="info_disclosure">
+                                                Information Disclosure
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="auth_bypass" checked>
+                                            <label class="form-check-label" for="auth_bypass">
+                                                Authentication Bypass
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="session_mgmt" checked>
+                                            <label class="form-check-label" for="session_mgmt">
+                                                Session Management
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="input_validation" checked>
+                                            <label class="form-check-label" for="input_validation">
+                                                Input Validation
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="file_upload" checked>
+                                            <label class="form-check-label" for="file_upload">
+                                                File Upload Security
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="access_control" checked>
+                                            <label class="form-check-label" for="access_control">
+                                                Access Controls
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">Advanced Options</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="use_anonymity" 
+                                                   name="use_anonymity" checked>
+                                            <label class="form-check-label" for="use_anonymity">
+                                                <i class="fas fa-user-secret me-1"></i>
+                                                Enable Anonymity
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="crawl_app">
+                                            <label class="form-check-label" for="crawl_app">
+                                                <i class="fas fa-spider me-1"></i>
+                                                Spider/Crawl Application
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="follow_redirects" checked>
+                                            <label class="form-check-label" for="follow_redirects">
+                                                <i class="fas fa-external-link-alt me-1"></i>
+                                                Follow Redirects
+                                            </label>
+                                        </div>
+                                        <div class="mb-3 mt-3">
+                                            <label for="max_depth" class="form-label">Crawl Depth</label>
+                                            <select class="form-select form-select-sm" id="max_depth">
+                                                <option value="1">1 Level</option>
+                                                <option value="2" selected>2 Levels</option>
+                                                <option value="3">3 Levels</option>
+                                                <option value="5">5 Levels</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-1"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-info">
+                                    <i class="fas fa-play me-1"></i> Start Web Security Test
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- OWASP Top 10 -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-list-ol me-1"></i> OWASP Top 10 Coverage
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>A01 - Broken Access Control</small>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>A02 - Cryptographic Failures</small>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>A03 - Injection</small>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>A04 - Insecure Design</small>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>A05 - Security Misconfiguration</small>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>A06 - Vulnerable Components</small>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>A07 - Authentication Failures</small>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>A08 - Software Integrity Failures</small>
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>A09 - Logging Failures</small>
+                    </div>
+                    <div class="mb-0">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        <small>A10 - Server-Side Request Forgery</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Test Categories -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-shield-alt me-1"></i> Security Test Categories
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="accordion accordion-flush" id="testCategories">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#injection-tests">
+                                    Injection Tests
+                                </button>
+                            </h2>
+                            <div id="injection-tests" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <small>
+                                        • SQL Injection<br>
+                                        • XSS (Cross-Site Scripting)<br>
+                                        • Command Injection<br>
+                                        • LDAP Injection
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#auth-tests">
+                                    Authentication Tests
+                                </button>
+                            </h2>
+                            <div id="auth-tests" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <small>
+                                        • Weak credentials<br>
+                                        • Session fixation<br>
+                                        • Password reset flaws<br>
+                                        • Multi-factor bypass
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                        data-bs-target="#config-tests">
+                                    Configuration Tests
+                                </button>
+                            </h2>
+                            <div id="config-tests" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    <small>
+                                        • Security headers<br>
+                                        • SSL/TLS configuration<br>
+                                        • Directory browsing<br>
+                                        • Error handling
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Notice -->
+            <div class="alert alert-warning" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Authorization Required:</strong> Only test web applications you own or have explicit permission to assess.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// URL validation
+document.getElementById('target_url').addEventListener('input', function() {
+    const url = this.value;
+    const urlPattern = /^https?:\/\/.+/;
+    
+    if (url && !urlPattern.test(url)) {
+        this.setCustomValidity('Please enter a valid URL starting with http:// or https://');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+
+// Crawl depth visibility
+document.getElementById('crawl_app').addEventListener('change', function() {
+    const depthSelect = document.getElementById('max_depth').closest('.mb-3');
+    depthSelect.style.display = this.checked ? 'block' : 'none';
+});
+
+// Initialize crawl depth visibility
+document.addEventListener('DOMContentLoaded', function() {
+    const crawlApp = document.getElementById('crawl_app');
+    const depthSelect = document.getElementById('max_depth').closest('.mb-3');
+    depthSelect.style.display = crawlApp.checked ? 'block' : 'none';
+});
+
+// Form submission validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const url = document.getElementById('target_url').value;
+    const checkedModules = document.querySelectorAll('input[type="checkbox"]:checked').length;
+    
+    if (checkedModules === 0) {
+        e.preventDefault();
+        alert('Please select at least one test module.');
+        return false;
+    }
+    
+    // Warn about testing external sites
+    if (url && !url.includes('localhost') && !url.includes('127.0.0.1') && !url.includes('192.168.')) {
+        const confirm = window.confirm(
+            'You are about to test an external web application. ' +
+            'Ensure you have proper authorization before proceeding.\n\n' +
+            'Do you want to continue?'
+        );
+        
+        if (!confirm) {
+            e.preventDefault();
+            return false;
+        }
+    }
+});
+</script>
+{% endblock %}
