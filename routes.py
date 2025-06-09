@@ -46,6 +46,22 @@ except ImportError:
     autonomous_enabled = False
     logging.warning("Autonomous Red Team module not available")
 
+# Initialize military-grade advanced systems
+try:
+    from secure_runtime import secure_runtime
+    from p2p_mesh import mesh_network
+    from ops_modules import execute_module, get_available_modules
+    from agent_mutation import mutation_engine, stealth_chain
+    from failsafe_system import failsafe_system
+    from voice_command import voice_engine
+    advanced_systems_enabled = True
+except ImportError as e:
+    advanced_systems_enabled = False
+    logging.warning(f"Advanced systems not available: {str(e)}")
+
+# Fix missing datetime import
+from datetime import datetime, timedelta
+
 @main_bp.route('/')
 @login_required
 def dashboard():
