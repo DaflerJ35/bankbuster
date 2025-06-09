@@ -2,7 +2,7 @@ modules = ["python-3.11"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["cargo", "libiconv", "libxcrypt", "nmap", "openssl", "pkg-config", "postgresql", "rustc"]
+packages = ["cairo", "cargo", "ffmpeg-full", "freetype", "ghostscript", "glibcLocales", "gobject-introspection", "gtk3", "imagemagickBig", "libiconv", "libxcrypt", "nmap", "openssl", "pkg-config", "postgresql", "qhull", "rustc", "sox", "tcl", "tcpdump", "tk", "wireshark", "xcodebuild", "zlib"]
 
 [deployment]
 deploymentTarget = "autoscale"

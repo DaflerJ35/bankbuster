@@ -24,6 +24,28 @@ web_security_tester = WebSecurityTester()
 report_generator = ReportGenerator()
 anonymity_manager = AnonymityManager()
 
+# Initialize advanced components with error handling
+try:
+    from ai_intelligence import ai_intelligence
+    ai_enabled = True
+except ImportError:
+    ai_enabled = False
+    logging.warning("AI Intelligence module not available")
+
+try:
+    from threat_hunting import threat_hunter
+    threat_hunting_enabled = True
+except ImportError:
+    threat_hunting_enabled = False
+    logging.warning("Threat Hunting module not available")
+
+try:
+    from autonomous_red_team import autonomous_engine
+    autonomous_enabled = True
+except ImportError:
+    autonomous_enabled = False
+    logging.warning("Autonomous Red Team module not available")
+
 @main_bp.route('/')
 @login_required
 def dashboard():
