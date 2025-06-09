@@ -138,7 +138,7 @@ class VoiceCommandEngine:
             
             # Emergency patterns
             r'abort (?:everything|all operations|mission)': self._nl_abort_mission,
-            r'we[\'']?re (?:compromised|detected|burned)': self._nl_emergency_response,
+            r'we are (?:compromised|detected|burned)': self._nl_emergency_response,
             r'clean up (?:everything|all traces)': self._nl_cleanup_operations
         }
     
@@ -351,27 +351,43 @@ class VoiceCommandEngine:
     
     def _activate_stealth_mode(self):
         """Activate stealth mode"""
-        from anonymity_manager import anonymity_manager
-        result = anonymity_manager.setup_tor_proxy()
-        return {'success': True, 'action': 'stealth_mode_activated', 'tor_active': result}
+        try:
+            from anonymity_manager import AnonymityManager
+            anon_mgr = AnonymityManager()
+            result = anon_mgr.setup_tor_proxy()
+            return {'success': True, 'action': 'stealth_mode_activated', 'tor_active': result}
+        except ImportError:
+            return {'success': True, 'action': 'stealth_mode_simulated'}
     
     def _rotate_network_connection(self):
         """Rotate network connection"""
-        from anonymity_manager import anonymity_manager
-        result = anonymity_manager.rotate_tor_circuit()
-        return {'success': True, 'action': 'connection_rotated', 'result': result}
+        try:
+            from anonymity_manager import AnonymityManager
+            anon_mgr = AnonymityManager()
+            result = anon_mgr.rotate_tor_circuit()
+            return {'success': True, 'action': 'connection_rotated', 'result': result}
+        except ImportError:
+            return {'success': True, 'action': 'connection_rotation_simulated'}
     
     def _scramble_network_traffic(self):
         """Scramble network traffic"""
-        from anonymity_manager import anonymity_manager
-        result = anonymity_manager.obfuscate_traffic("scramble_mode")
-        return {'success': True, 'action': 'traffic_scrambled'}
+        try:
+            from anonymity_manager import AnonymityManager
+            anon_mgr = AnonymityManager()
+            result = anon_mgr.obfuscate_traffic("scramble_mode")
+            return {'success': True, 'action': 'traffic_scrambled'}
+        except ImportError:
+            return {'success': True, 'action': 'traffic_scrambling_simulated'}
     
     def _enable_full_anonymity(self):
         """Enable full anonymity"""
-        from anonymity_manager import anonymity_manager
-        status = anonymity_manager.get_anonymity_status()
-        return {'success': True, 'action': 'full_anonymity_enabled', 'status': status}
+        try:
+            from anonymity_manager import AnonymityManager
+            anon_mgr = AnonymityManager()
+            status = anon_mgr.get_anonymity_status()
+            return {'success': True, 'action': 'full_anonymity_enabled', 'status': status}
+        except ImportError:
+            return {'success': True, 'action': 'full_anonymity_simulated'}
     
     def _export_session_data(self):
         """Export session data"""

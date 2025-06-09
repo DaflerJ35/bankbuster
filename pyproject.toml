@@ -26,4 +26,5 @@ dependencies = [
     "lxml",
     "impacket",
     "python-libnmap",
+    "psutil",
 ]
