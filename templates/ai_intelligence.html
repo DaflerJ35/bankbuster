@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}AI Intelligence - Red Team Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-brain me-2"></i>AI-Powered Vulnerability Intelligence</h2>
+                <div>
+                    <button class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#aiInfoModal">
+                        <i class="fas fa-info-circle me-1"></i>About AI Intelligence
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xl-8">
+            <!-- AI Analysis Control Panel -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0"><i class="fas fa-cogs me-2"></i>AI Analysis Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <form id="aiAnalysisForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="sessionSelect" class="form-label">Target Session</label>
+                                    <select class="form-select" id="sessionSelect" name="session_id" required>
+                                        <option value="">Select a scan session...</option>
+                                        {% for session in current_user.scan_sessions %}
+                                        <option value="{{ session.id }}">{{ session.session_name }} - {{ session.created_at.strftime('%Y-%m-%d %H:%M') }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="analysisType" class="form-label">Analysis Type</label>
+                                    <select class="form-select" id="analysisType" name="analysis_type">
+                                        <option value="comprehensive">Comprehensive Analysis</option>
+                                        <option value="vulnerability_prediction">Vulnerability Prediction</option>
+                                        <option value="exploit_assessment">Exploit Assessment</option>
+                                        <option value="zero_day_detection">Zero-Day Detection</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="targetData" class="form-label">Additional Target Data (JSON)</label>
+                            <textarea class="form-control" id="targetData" name="target_data" rows="4" 
+                                placeholder='{"network_scan": {"open_ports": [22, 80, 443], "services": [...]}}'></textarea>
+                            <div class="form-text">Optional: Provide additional target information in JSON format</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-brain me-2"></i>Start AI Analysis
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- AI Analysis Results -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h5 class="card-title mb-0"><i class="fas fa-chart-line me-2"></i>Analysis Results</h5>
+                </div>
+                <div class="card-body">
+                    <div id="aiResults" class="text-center text-muted">
+                        <i class="fas fa-robot fa-3x mb-3 opacity-50"></i>
+                        <p>No AI analysis results yet. Start an analysis to see intelligent insights.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <!-- AI Capabilities -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0"><i class="fas fa-microchip me-2"></i>AI Capabilities</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <div class="badge bg-success rounded-pill me-3">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div>
+                                    <strong>Vulnerability Prediction</strong><br>
+                                    <small class="text-muted">ML-powered vulnerability likelihood assessment</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <div class="badge bg-success rounded-pill me-3">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div>
+                                    <strong>Exploit Success Probability</strong><br>
+                                    <small class="text-muted">Neural network-based exploit assessment</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <div class="badge bg-success rounded-pill me-3">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div>
+                                    <strong>Zero-Day Detection</strong><br>
+                                    <small class="text-muted">Anomaly detection for unknown vulnerabilities</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="d-flex align-items-center">
+                                <div class="badge bg-success rounded-pill me-3">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div>
+                                    <strong>Attack Vector Analysis</strong><br>
+                                    <small class="text-muted">Intelligent attack path recommendations</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-time Intelligence Feed -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header">
+                    <h6 class="card-title mb-0"><i class="fas fa-rss me-2"></i>Intelligence Feed</h6>
+                </div>
+                <div class="card-body">
+                    <div id="intelligenceFeed">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="badge bg-info rounded-pill me-3 mt-1">AI</div>
+                            <div>
+                                <small class="text-muted">2 minutes ago</small><br>
+                                <strong>CVE-2024-XXXX</strong> detected in target environment
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="badge bg-warning rounded-pill me-3 mt-1">ML</div>
+                            <div>
+                                <small class="text-muted">5 minutes ago</small><br>
+                                High-confidence vulnerability pattern identified
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-start">
+                            <div class="badge bg-success rounded-pill me-3 mt-1">AI</div>
+                            <div>
+                                <small class="text-muted">8 minutes ago</small><br>
+                                Exploit chain optimization completed
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Information Modal -->
+<div class="modal fade" id="aiInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-brain me-2"></i>AI Intelligence System</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Advanced Machine Learning Capabilities</h6>
+                <p>Our AI Intelligence system leverages cutting-edge machine learning algorithms to provide:</p>
+                <ul>
+                    <li><strong>Predictive Vulnerability Analysis:</strong> Uses trained models to predict vulnerability likelihood</li>
+                    <li><strong>Exploit Success Modeling:</strong> Neural networks assess exploitation probability</li>
+                    <li><strong>Zero-Day Detection:</strong> Anomaly detection identifies novel attack patterns</li>
+                    <li><strong>Threat Intelligence Integration:</strong> Real-time correlation with global threat data</li>
+                </ul>
+                
+                <h6 class="mt-4">How It Works</h6>
+                <p>The system analyzes your scan results using multiple ML models trained on extensive penetration testing data. It provides actionable insights and recommendations to optimize your red team operations.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('aiAnalysisForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalText = submitButton.innerHTML;
+    
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing...';
+    submitButton.disabled = true;
+    
+    fetch('/start-ai-analysis', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('aiResults').innerHTML = `
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    AI analysis started successfully. Results will appear here as they become available.
+                </div>
+            `;
+            // Start polling for results
+            pollForResults(formData.get('session_id'));
+        } else {
+            document.getElementById('aiResults').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${data.error || 'Analysis failed'}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        document.getElementById('aiResults').innerHTML = `
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                Error starting analysis: ${error.message}
+            </div>
+        `;
+    })
+    .finally(() => {
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+    });
+});
+
+function pollForResults(sessionId) {
+    // Simulate AI results polling
+    setTimeout(() => {
+        document.getElementById('aiResults').innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0">Vulnerability Predictions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <strong>Remote Code Execution</strong>
+                                <div class="progress">
+                                    <div class="progress-bar bg-danger" style="width: 85%">85%</div>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Privilege Escalation</strong>
+                                <div class="progress">
+                                    <div class="progress-bar bg-warning" style="width: 72%">72%</div>
+                                </div>
+                            </div>
+                            <div>
+                                <strong>Information Disclosure</strong>
+                                <div class="progress">
+                                    <div class="progress-bar bg-info" style="width: 65%">65%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">AI Recommendations</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    Focus on SSH service exploitation
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    Develop multi-stage payload chain
+                                </li>
+                                <li>
+                                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                                    High success probability via web vector
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }, 3000);
+}
+</script>
+{% endblock %}

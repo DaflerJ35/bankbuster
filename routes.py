@@ -585,3 +585,322 @@ def api_rotate_tor_circuit():
     except Exception as e:
         logging.error(f"Tor circuit rotation error: {str(e)}")
         return jsonify({'error': 'Internal server error'}), 500
+
+# ===============================
+# ADVANCED AI-POWERED FEATURES
+# ===============================
+
+@main_bp.route('/ai-intelligence')
+@login_required
+def ai_intelligence_page():
+    """AI-powered vulnerability intelligence interface"""
+    if not ai_enabled:
+        flash('AI Intelligence module is not available', 'warning')
+        return redirect(url_for('main.dashboard'))
+    
+    return render_template('ai_intelligence.html')
+
+@main_bp.route('/start-ai-analysis', methods=['POST'])
+@login_required
+def start_ai_analysis():
+    """Start AI-powered vulnerability analysis"""
+    if not ai_enabled:
+        return jsonify({'error': 'AI Intelligence not available'}), 503
+    
+    try:
+        if current_user.role not in ['admin', 'operator']:
+            return jsonify({'error': 'Insufficient privileges'}), 403
+        
+        session_id = request.form.get('session_id')
+        target_data = request.form.get('target_data')
+        
+        if not session_id:
+            return jsonify({'error': 'Session ID required'}), 400
+        
+        # Parse target data
+        try:
+            target_info = json.loads(target_data) if target_data else {}
+        except json.JSONDecodeError:
+            return jsonify({'error': 'Invalid target data format'}), 400
+        
+        # Start AI analysis in background
+        def run_ai_analysis():
+            try:
+                result = ai_intelligence.analyze_target(session_id, target_info)
+                logging.info(f"AI analysis completed for session {session_id}")
+            except Exception as e:
+                logging.error(f"AI analysis failed: {str(e)}")
+        
+        analysis_thread = threading.Thread(target=run_ai_analysis, daemon=True)
+        analysis_thread.start()
+        
+        flash('AI-powered vulnerability analysis started', 'success')
+        return jsonify({'success': True, 'message': 'AI analysis initiated'})
+    
+    except Exception as e:
+        logging.error(f"AI analysis start error: {str(e)}")
+        return jsonify({'error': 'Failed to start AI analysis'}), 500
+
+@main_bp.route('/threat-hunting')
+@login_required
+def threat_hunting_page():
+    """Advanced threat hunting interface"""
+    if not threat_hunting_enabled:
+        flash('Threat Hunting module is not available', 'warning')
+        return redirect(url_for('main.dashboard'))
+    
+    return render_template('threat_hunting.html')
+
+@main_bp.route('/start-threat-hunt', methods=['POST'])
+@login_required
+def start_threat_hunt():
+    """Start advanced threat hunting session"""
+    if not threat_hunting_enabled:
+        return jsonify({'error': 'Threat Hunting not available'}), 503
+    
+    try:
+        if current_user.role not in ['admin', 'operator']:
+            return jsonify({'error': 'Insufficient privileges'}), 403
+        
+        hunt_type = request.form.get('hunt_type', 'comprehensive')
+        hunt_config = {
+            'type': hunt_type,
+            'targets': request.form.getlist('targets'),
+            'duration': int(request.form.get('duration', 3600)),  # 1 hour default
+            'stealth_level': request.form.get('stealth_level', 'medium')
+        }
+        
+        hunt_id = threat_hunter.start_threat_hunt(hunt_config)
+        
+        # Log threat hunting activity
+        audit_log = AuditLog(
+            user_id=current_user.id,
+            action='threat_hunt_started',
+            target=f'Hunt ID: {hunt_id}',
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent', '')
+        )
+        audit_log.set_encrypted_details({
+            'hunt_type': hunt_type,
+            'hunt_id': hunt_id,
+            'config': hunt_config
+        })
+        db.session.add(audit_log)
+        db.session.commit()
+        
+        flash(f'Threat hunting session started: {hunt_id}', 'success')
+        return jsonify({'success': True, 'hunt_id': hunt_id})
+    
+    except Exception as e:
+        logging.error(f"Threat hunt start error: {str(e)}")
+        return jsonify({'error': 'Failed to start threat hunt'}), 500
+
+@main_bp.route('/api/threat-hunt-status/<hunt_id>')
+@login_required
+def api_threat_hunt_status(hunt_id):
+    """API endpoint for threat hunt status"""
+    if not threat_hunting_enabled:
+        return jsonify({'error': 'Threat Hunting not available'}), 503
+    
+    try:
+        status = threat_hunter.get_hunt_status(hunt_id)
+        return jsonify(status)
+    
+    except Exception as e:
+        logging.error(f"Threat hunt status error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@main_bp.route('/autonomous-operations')
+@login_required
+def autonomous_operations_page():
+    """Autonomous red team operations interface"""
+    if not autonomous_enabled:
+        flash('Autonomous Red Team module is not available', 'warning')
+        return redirect(url_for('main.dashboard'))
+    
+    return render_template('autonomous_operations.html')
+
+@main_bp.route('/start-autonomous-operation', methods=['POST'])
+@login_required
+def start_autonomous_operation():
+    """Start fully autonomous red team operation"""
+    if not autonomous_enabled:
+        return jsonify({'error': 'Autonomous Red Team not available'}), 503
+    
+    try:
+        if current_user.role != 'admin':  # Only admins can start autonomous operations
+            return jsonify({'error': 'Admin privileges required'}), 403
+        
+        operation_config = {
+            'targets': request.form.getlist('targets'),
+            'objectives': [
+                {'type': obj_type, 'priority': priority} 
+                for obj_type, priority in zip(
+                    request.form.getlist('objective_types'),
+                    request.form.getlist('objective_priorities')
+                )
+            ],
+            'stealth_level': request.form.get('stealth_level', 'medium'),
+            'automation_level': request.form.get('automation_level', 'full'),
+            'success_threshold': float(request.form.get('success_threshold', 0.8)),
+            'max_duration': int(request.form.get('max_duration', 14400)),  # 4 hours default
+            'learning_enabled': request.form.get('learning_enabled') == 'on',
+            'auto_cleanup': request.form.get('auto_cleanup') == 'on'
+        }
+        
+        operation_id = autonomous_engine.start_autonomous_operation(operation_config)
+        
+        # Log autonomous operation
+        audit_log = AuditLog(
+            user_id=current_user.id,
+            action='autonomous_operation_started',
+            target=f'Operation ID: {operation_id}',
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent', '')
+        )
+        audit_log.set_encrypted_details({
+            'operation_id': operation_id,
+            'config': operation_config
+        })
+        db.session.add(audit_log)
+        db.session.commit()
+        
+        flash(f'Autonomous red team operation started: {operation_id}', 'success')
+        return jsonify({'success': True, 'operation_id': operation_id})
+    
+    except Exception as e:
+        logging.error(f"Autonomous operation start error: {str(e)}")
+        return jsonify({'error': 'Failed to start autonomous operation'}), 500
+
+@main_bp.route('/api/autonomous-operation-status/<operation_id>')
+@login_required
+def api_autonomous_operation_status(operation_id):
+    """API endpoint for autonomous operation status"""
+    if not autonomous_enabled:
+        return jsonify({'error': 'Autonomous Red Team not available'}), 503
+    
+    try:
+        status = autonomous_engine.get_operation_status(operation_id)
+        return jsonify(status)
+    
+    except Exception as e:
+        logging.error(f"Autonomous operation status error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@main_bp.route('/advanced-payloads')
+@login_required
+def advanced_payloads_page():
+    """Advanced payload generation interface"""
+    return render_template('advanced_payloads.html')
+
+@main_bp.route('/generate-payload', methods=['POST'])
+@login_required
+def generate_payload():
+    """Generate advanced evasive payload"""
+    try:
+        if current_user.role not in ['admin', 'operator']:
+            return jsonify({'error': 'Insufficient privileges'}), 403
+        
+        payload_config = {
+            'type': request.form.get('payload_type', 'reverse_shell'),
+            'os': request.form.get('target_os', 'linux'),
+            'evasion_level': request.form.get('evasion_level', 'medium'),
+            'delivery': request.form.get('delivery_method', 'binary'),
+            'lhost': request.form.get('lhost', '127.0.0.1'),
+            'lport': int(request.form.get('lport', 4444))
+        }
+        
+        # Import here to avoid startup issues
+        from advanced_payloads import payload_generator
+        payload_result = payload_generator.generate_payload(payload_config)
+        
+        # Log payload generation
+        audit_log = AuditLog(
+            user_id=current_user.id,
+            action='payload_generated',
+            target=payload_config['type'],
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent', '')
+        )
+        audit_log.set_encrypted_details({
+            'payload_type': payload_config['type'],
+            'target_os': payload_config['os'],
+            'evasion_level': payload_config['evasion_level'],
+            'payload_hash': payload_result.get('hash', 'unknown')
+        })
+        db.session.add(audit_log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'payload': payload_result['payload'],
+            'instructions': payload_result['instructions'],
+            'hash': payload_result.get('hash', ''),
+            'size': payload_result.get('size', 0)
+        })
+    
+    except Exception as e:
+        logging.error(f"Payload generation error: {str(e)}")
+        return jsonify({'error': 'Failed to generate payload'}), 500
+
+@main_bp.route('/behavioral-analysis')
+@login_required
+def behavioral_analysis_page():
+    """Behavioral analysis and insider threat detection"""
+    return render_template('behavioral_analysis.html')
+
+@main_bp.route('/api/behavioral-analytics')
+@login_required
+def api_behavioral_analytics():
+    """API endpoint for behavioral analytics data"""
+    try:
+        # Get recent user activity patterns
+        recent_logs = AuditLog.query.filter(
+            AuditLog.timestamp >= datetime.utcnow() - timedelta(days=7)
+        ).order_by(AuditLog.timestamp.desc()).limit(1000).all()
+        
+        # Analyze patterns
+        user_activity = {}
+        for log in recent_logs:
+            user_id = log.user_id
+            if user_id not in user_activity:
+                user_activity[user_id] = {
+                    'total_actions': 0,
+                    'unique_actions': set(),
+                    'peak_hours': [],
+                    'risk_score': 0.0
+                }
+            
+            user_activity[user_id]['total_actions'] += 1
+            user_activity[user_id]['unique_actions'].add(log.action)
+            user_activity[user_id]['peak_hours'].append(log.timestamp.hour)
+        
+        # Calculate risk scores
+        for user_id, activity in user_activity.items():
+            activity['unique_actions'] = len(activity['unique_actions'])
+            
+            # Simple risk scoring based on activity patterns
+            if activity['total_actions'] > 100:  # High activity
+                activity['risk_score'] += 0.3
+            if activity['unique_actions'] > 20:  # Many different actions
+                activity['risk_score'] += 0.2
+            
+            # Check for off-hours activity
+            off_hours = [h for h in activity['peak_hours'] if h < 6 or h > 22]
+            if len(off_hours) > len(activity['peak_hours']) * 0.3:
+                activity['risk_score'] += 0.4
+            
+            activity['peak_hours'] = list(set(activity['peak_hours']))
+        
+        return jsonify({
+            'user_activity': user_activity,
+            'total_users_analyzed': len(user_activity),
+            'high_risk_users': [
+                uid for uid, data in user_activity.items() 
+                if data['risk_score'] > 0.6
+            ]
+        })
+    
+    except Exception as e:
+        logging.error(f"Behavioral analytics error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
