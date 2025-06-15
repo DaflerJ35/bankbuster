@@ -66,7 +66,8 @@ Live Agent Spawn
 
 Data Exfiltration + Reporting
 
-    Encrypted ZIPs only sent via temporary relay nodes that auto-expire.
+    Encrypted ZIPs only sent via temporary relay nodes that auto-exp
+    ire.
 
     Option to save reports only locally in military-grade AES container.
 

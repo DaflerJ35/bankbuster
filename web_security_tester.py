@@ -4,8 +4,7 @@ import re
 import json
 import time
 from datetime import datetime
-from models import ScanSession, Finding
-from app import db
+from models import ScanSession, Finding, db
 from crypto_utils import encrypt_data
 from anonymity_manager import AnonymityManager
 import logging

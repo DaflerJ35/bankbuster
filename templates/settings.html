@@ -31,24 +31,24 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-control" value="{{ current_user.username }}" readonly>
+                        <label for="username-field" class="form-label">Username</label>
+                        <input id="username-field" type="text" class="form-control" value="{{ current_user.username }}" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" value="{{ current_user.email }}" readonly>
+                        <label for="email-field" class="form-label">Email</label>
+                        <input id="email-field" type="email" class="form-control" value="{{ current_user.email }}" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Role</label>
-                        <input type="text" class="form-control" value="{{ current_user.role|title }}" readonly>
+                        <label for="role-field" class="form-label">Role</label>
+                        <input id="role-field" type="text" class="form-control" value="{{ current_user.role|title }}" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Account Created</label>
-                        <input type="text" class="form-control" value="{{ current_user.created_at.strftime('%Y-%m-%d %H:%M') }}" readonly>
+                        <label for="created-field" class="form-label">Account Created</label>
+                        <input id="created-field" type="text" class="form-control" value="{{ current_user.created_at.strftime('%Y-%m-%d %H:%M') }}" readonly>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Last Login</label>
-                        <input type="text" class="form-control" 
+                        <label for="lastlogin-field" class="form-label">Last Login</label>
+                        <input id="lastlogin-field" type="text" class="form-control" 
                                value="{{ current_user.last_login.strftime('%Y-%m-%d %H:%M') if current_user.last_login else 'First login' }}" readonly>
                     </div>
                     <div class="d-grid">

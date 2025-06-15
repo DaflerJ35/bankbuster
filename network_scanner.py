@@ -1,18 +1,34 @@
-import nmap
 import socket
 import threading
 import time
 import json
 from datetime import datetime
-from models import ScanSession, Finding
-from app import db
+from models import ScanSession, Finding, db
 from crypto_utils import encrypt_data
 from anonymity_manager import AnonymityManager
 import logging
 
+try:
+    import nmap
+    NMAP_AVAILABLE = True
+except ImportError:
+    NMAP_AVAILABLE = False
+    logging.warning("python-nmap not available")
+
 class NetworkScanner:
     def __init__(self):
-        self.nm = nmap.PortScanner()
+        if NMAP_AVAILABLE:
+            try:
+                self.nm = nmap.PortScanner()
+                self.nmap_ready = True
+            except Exception as e:
+                logging.error(f"Failed to initialize nmap: {e}")
+                self.nm = None
+                self.nmap_ready = False
+        else:
+            self.nm = None
+            self.nmap_ready = False
+        
         self.anonymity = AnonymityManager()
         self.is_scanning = False
         self.scan_results = {}
@@ -83,6 +99,10 @@ class NetworkScanner:
         results = []
         
         try:
+            if not self.nmap_ready:
+                # Fallback to basic socket scanning when nmap is not available
+                return self._basic_socket_scan(target)
+            
             # Determine nmap arguments based on scan type
             nmap_args = self._get_nmap_args(scan_type)
             
@@ -222,3 +242,51 @@ class NetworkScanner:
         except Exception as e:
             logging.error(f"Service detection failed: {str(e)}")
             return []
+    
+    def _basic_socket_scan(self, target):
+        """Basic socket-based port scanning when nmap is not available"""
+        results = []
+        common_ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 1433, 3306, 3389, 5432, 8080]
+        
+        try:
+            for port in common_ports:
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(1)
+                    result = sock.connect_ex((target, port))
+                    
+                    if result == 0:
+                        # Port is open
+                        service_name = self._get_service_name(port)
+                        results.append({
+                            'host': target,
+                            'port': port,
+                            'protocol': 'tcp',
+                            'state': 'open',
+                            'service': service_name,
+                            'version': '',
+                            'product': '',
+                            'reason': 'syn-ack'
+                        })
+                    
+                    sock.close()
+                    
+                except Exception as e:
+                    logging.debug(f"Socket scan error for {target}:{port} - {e}")
+                    continue
+            
+            return results
+            
+        except Exception as e:
+            logging.error(f"Basic socket scan failed: {str(e)}")
+            return []
+    
+    def _get_service_name(self, port):
+        """Get common service name for a port"""
+        service_map = {
+            21: 'ftp', 22: 'ssh', 23: 'telnet', 25: 'smtp', 53: 'dns',
+            80: 'http', 110: 'pop3', 143: 'imap', 443: 'https',
+            993: 'imaps', 995: 'pop3s', 1433: 'mssql', 3306: 'mysql',
+            3389: 'rdp', 5432: 'postgresql', 8080: 'http-proxy'
+        }
+        return service_map.get(port, 'unknown')

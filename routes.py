@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import login_required, current_user
-from models import ScanSession, Finding, Report, NetworkTarget, AuditLog, User
-from app import db
+from models import ScanSession, Finding, Report, NetworkTarget, AuditLog, User, db
 from network_scanner import NetworkScanner
 from vulnerability_scanner import VulnerabilityScanner
 from exploit_framework import ExploitFramework

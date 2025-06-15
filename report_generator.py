@@ -1,9 +1,14 @@
 import json
 import base64
 from datetime import datetime
-from jinja2 import Template
-from models import ScanSession, Finding, Report, User
-from app import db
+try:
+    from jinja2 import Template
+except ImportError:
+    # Jinja2 is a dependency and should be installed via requirements.txt
+    # If you see this error, run: pip install -r requirements.txt
+    logging.error("Jinja2 not found. Please install dependencies: pip install -r requirements.txt")
+    raise # Re-raise the ImportError so the application knows a critical dependency is missing
+from models import ScanSession, Finding, Report, User, db
 from crypto_utils import encrypt_data, decrypt_data
 import logging
 

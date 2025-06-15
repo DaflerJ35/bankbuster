@@ -1,86 +1,177 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Red Team Platform{% endblock %}
+{% block title %}Ghost Mode Access{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card border-0 shadow">
-                <div class="card-header bg-dark text-center">
-                    <i class="fas fa-shield-alt text-danger fa-3x mb-3"></i>
-                    <h4 class="mb-0">Red Team Platform</h4>
-                    <small class="text-muted">Authorized Access Only</small>
+<div class="matrix-bg">
+    <canvas id="matrixCanvas"></canvas>
+</div>
+<div class="container-fluid vh-100">
+    <div class="row h-100">
+        <div class="col-md-6 d-flex align-items-center justify-content-center bg-dark">
+            <div class="text-center text-white">
+                <h1 class="display-4 mb-4">
+                    <i class="fas fa-user-secret"></i>
+                    Ghost Mode
+                </h1>
+                <p class="lead">Stealth Penetration Testing & Advanced Red Team Operations</p>
+                <div class="mt-4">
+                    <i class="fas fa-shield-virus fa-2x mb-3"></i>
+                    <p>Military-grade encryption • Anonymous operations • Zero-trace access</p>
+                    <div class="mt-3">
+                        <span class="badge bg-success me-2"><i class="fas fa-check"></i> Tor Ready</span>
+                        <span class="badge bg-success me-2"><i class="fas fa-check"></i> Encrypted</span>
+                        <span class="badge bg-success"><i class="fas fa-check"></i> Anonymous</span>
+                    </div>
                 </div>
-                <div class="card-body p-4">
-                    <form method="POST">
+            </div>
+        </div>
+        
+        <div class="col-md-6 d-flex align-items-center justify-content-center">
+            <div class="card border-0 shadow-lg ghost-login-card">
+                <div class="card-body p-5">
+                    <h3 class="card-title text-center mb-4">
+                        <i class="fas fa-user-ninja"></i> 
+                        {% if require_2fa %}Two-Factor Authentication{% else %}Ghost Access{% endif %}
+                    </h3>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" id="loginForm">
+                        {% if not require_2fa %}
                         <div class="mb-3">
-                            <label for="username" class="form-label">
-                                <i class="fas fa-user me-1"></i> Username
-                            </label>
-                            <input type="text" class="form-control" id="username" name="username" required autofocus>
+                            <label for="username" class="form-label">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
                         </div>
                         
                         <div class="mb-3">
-                            <label for="password" class="form-label">
-                                <i class="fas fa-lock me-1"></i> Password
-                            </label>
-                            <input type="password" class="form-control" id="password" name="password" required>
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
                         </div>
+                        {% else %}
+                        <input type="hidden" name="username" value="{{ username }}">
+                        <div class="alert alert-info">
+                            <i class="fas fa-mobile-alt"></i> Enter the 6-digit code from your authenticator app
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="totp_code" class="form-label">Authentication Code</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                <input type="text" class="form-control form-control-lg text-center font-monospace" 
+                                       id="totp_code" name="totp_code" maxlength="6" pattern="[0-9]{6}" 
+                                       placeholder="000000" required autocomplete="off">
+                            </div>
+                            <div class="form-text">Code refreshes every 30 seconds</div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Hidden device fingerprint field -->
+                        <input type="hidden" id="device_fingerprint" name="device_fingerprint">
                         
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-danger btn-lg">
-                                <i class="fas fa-sign-in-alt me-2"></i> Secure Login
+                            <button type="submit" class="btn btn-dark btn-lg">
+                                <i class="fas fa-user-secret"></i> 
+                                {% if require_2fa %}Verify & Enter Ghost Mode{% else %}Enter Ghost Mode{% endif %}
                             </button>
                         </div>
                     </form>
+                    
+                    {% if require_2fa %}
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Login
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="text-center mt-4">
+                        <small class="text-muted">
+                            <i class="fas fa-shield-virus"></i> Zero-trace • Encrypted • Anonymous
+                        </small>
+                    </div>
                 </div>
-                <div class="card-footer bg-dark text-center">
-                    <small class="text-muted">
-                        <i class="fas fa-lock me-1"></i>
-                        Military-grade encryption enabled
-                    </small>
-                </div>
-            </div>
-            
-            <!-- Security Notice -->
-            <div class="alert alert-warning mt-3" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Security Notice:</strong> This system is for authorized penetration testing only. 
-                All activities are logged and monitored.
             </div>
         </div>
     </div>
 </div>
 
-<style>
-.min-vh-100 {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%);
+<script type="application/json" id="ghost-config">{{ require_2fa | tojson | safe }}</script>
+<script src="{{ url_for('static', filename='js/matrix-login.js') }}"></script> <!-- Added Matrix Login JS -->
+<script>
+// Template variables
+window.ghostConfig = {
+    require2FA: JSON.parse(document.getElementById('ghost-config').textContent)
+};
+
+// Generate device fingerprint
+function generateDeviceFingerprint() {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.textBaseline = 'top';
+    ctx.font = '14px Arial';
+    ctx.fillText('Device fingerprint', 2, 2);
+    
+    const fingerprint = {
+        screen: screen.width + 'x' + screen.height,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        language: navigator.language,
+        platform: navigator.platform,
+        canvas: canvas.toDataURL(),
+        userAgent: navigator.userAgent.substring(0, 100) // Truncated for security
+    };
+    
+    return btoa(JSON.stringify(fingerprint)).substring(0, 64);
 }
 
-.card {
-    backdrop-filter: blur(10px);
-    background: rgba(33, 37, 41, 0.95);
-}
+// Set device fingerprint on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('device_fingerprint').value = generateDeviceFingerprint();
+    
+    if (window.ghostConfig.require2FA) {
+        // Auto-focus on 2FA input
+        var totpInput = document.getElementById('totp_code');
+        if (totpInput) {
+            totpInput.focus();
+            
+            // Auto-submit when 6 digits entered
+            totpInput.addEventListener('input', function(e) {
+                if (e.target.value.length === 6) {
+                    setTimeout(function() {
+                        document.getElementById('loginForm').submit();
+                    }, 500);
+                }
+            });
+        }
+    } else {
+        // Focus on username field
+        var usernameInput = document.getElementById('username');
+        if (usernameInput) {
+            usernameInput.focus();
+        }
+    }
+});
 
-.form-control:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
-}
-
-.btn-danger:hover {
-    transform: translateY(-2px);
-    transition: all 0.3s ease;
-}
-
-.fa-shield-alt {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.7; }
-    100% { opacity: 1; }
-}
-</style>
+// Add loading state to form submission
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+    submitBtn.disabled = true;
+});
+</script>
 {% endblock %}

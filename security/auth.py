@@ -1,4 +1,7 @@
-from flask import request, session, current_app
+try:
+    from flask import request, session, current_app
+except ImportError:
+    raise ImportError("Flask is required. Please install it using: pip install flask")
 from flask_login import current_user
 from functools import wraps
 import time
@@ -6,8 +9,7 @@ import ipaddress
 import re
 from datetime import datetime, timedelta
 
-from app import db
-from models import AuditLog
+from models import AuditLog, db
 
 # Rate limiting storage
 rate_limit_storage = {}

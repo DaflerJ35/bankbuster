@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*env/
+*venv/
+env/
+venv/
+ENV/
+VENV/
+.env
+.venv
+
+# Instance folder (contains database)
+instance/
+
+# Logs
+*.log
+ghost.log
+secure.log
+
+# Keys - EXTREMELY IMPORTANT TO IGNORE
+master.key
+salt.key
+
+# Executables / Installers
+*.exe
+nmap-setup.exe
+
+# IDE / Tool specific
+.replit
+
+# OS specific
+.DS_Store
+Thumbs.db

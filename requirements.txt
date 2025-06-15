@@ -1,0 +1,26 @@
+# Core Flask dependencies
+Flask==2.3.3
+Jinja2==3.1.2  # Added for report generation templating
+Flask-SQLAlchemy==3.0.5
+Flask-Login==0.6.3
+Werkzeug==2.3.7
+
+# Database
+SQLAlchemy==2.0.31
+
+# Security and Cryptography
+cryptography==41.0.4
+PyOTP==2.9.0
+qrcode[pil]==7.4.2
+
+# Network and Security Tools
+requests==2.31.0
+PySocks==1.7.1
+stem==1.8.2
+paramiko==3.4.0
+
+# System monitoring
+psutil==5.9.5
+
+# Development dependencies (optional)
+flask-wtf==1.1.1
